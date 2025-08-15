@@ -17,6 +17,19 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 - Simple animated "Thinking..." indicator while requests are in flight.
 - Threaded networking so the UI remains responsive.
 - Simple configuration via `config.py`.
+- Model selection menu: switch which chat model you are talking to at runtime without losing conversation context.
+
+New: Model selection menu
+
+- A new top-level "Model" menu lets the user pick the active chat model from the GUI.
+- The available models (exact string values offered in the menu) are:
+  - gpt-5
+  - gpt-5-mini
+  - gpt-5-nano
+  - gpt-4o-mini
+- Switching models preserves the conversation context: imported files and previous messages remain in the shared conversation, so the new model receives the full conversation history for subsequent requests.
+- The currently selected model is captured at the moment you hit "Send" and used for that request.
+- Image generation still uses the configured image model (IMAGE_MODEL_VERSION) from `config.py` and is not affected by this menu.
 
 ---
 
@@ -156,6 +169,13 @@ MODEL_VERSION = "gpt-5-mini"
 ASSISTANT_NAME = "Jeeves"
 ```
 
+Notes related to the new Model menu:
+
+- The GUI's Model menu uses the list of available model names (see Features). The menu selection overrides the `MODEL_VERSION` runtime default for chat requests while the app is running.
+- On startup, the app will prefer the `MODEL_VERSION` from `config.py` as the initial selection if it matches one of the available menu options. Otherwise it will default to the first model in the menu.
+- Changing the selected model from the menu does not clear or alter the conversation history — it only changes which model will receive the next request.
+- Image generation still uses `IMAGE_MODEL_VERSION` from `config.py` (unchanged).
+
 ### Setting the OPENAI_KEY env var
 
 - macOS / Linux (bash/zsh):
@@ -202,6 +222,10 @@ The GUI will open. Type messages in the bottom input area and press "Send".
   - Export Chat: saves a timestamped `.txt` file containing the chat contents.
   - Import File: choose a `.txt`, `.md`, `.docx`, or `.pdf`. The content is appended to the conversation as a user message, and a truncated preview is shown in the chat.
   - Generate Image...: open an image prompt dialog to generate images (saved to folder and inserted into chat).
+- Menu → Model:
+  - Select which chat model to use for subsequent messages.
+  - Available models (menu items): gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini.
+  - The selected model is used for requests when you press "Send". The app keeps the conversation intact when switching models; the next model receives the full conversation history.
 
 Notes:
 
@@ -229,6 +253,7 @@ Large files:
 - Sizes: 256x256, 512x512, 1024x1024.
 - The app attempts to handle responses containing either base64 (`b64_json`) or a URL and saves images to the selected folder as `image-YYYYmmdd-HHMMSS.png`.
 - Images are displayed inline; the app keeps references to Tk PhotoImage objects to prevent garbage collection.
+- Image generation is not affected by the Model menu and continues to use `IMAGE_MODEL_VERSION` from `config.py`.
 
 ---
 
@@ -240,6 +265,94 @@ Large files:
 - A `threading.Lock` (`conversation_lock`) protects access to the shared conversation list.
 - Streaming is implemented via `stream=True` from the OpenAI client and appends partial "delta" content to the chat widget as it arrives.
 - For better testability, see `file_utils.py` (in repository root), which provides file-reading utilities used by the GUI. You may import that module from `main.py`.
+- The Model menu uses Tk radio menu entries bound to a Tkinter StringVar. The selected model's value is captured when sending so the intended model is used for that request.
+
+### Model Guide: Which to Choose
+
+#### gpt-5 (full model)
+
+**When it shines**
+
+- Multi-file reasoning (e.g., “Here’s my repo, fix X” and it remembers relationships between files).
+- Deep debugging of subtle logic or performance issues.
+- Refactoring big chunks of code while keeping style consistent.
+- Explaining advanced algorithms in detail before coding them.
+
+**Downsides**
+
+- More expensive per call.
+- Slower than mini/nano, so quick “one-liner” requests feel overkill.
+
+#### gpt-5-mini
+
+**When it shines**
+
+- Day-to-day Python work: writing functions, fixing bugs, writing tests.
+- Understanding short/medium snippets and producing clean solutions.
+- Good balance of cost vs correctness — often 90–95% as good as full gpt-5 for typical coding tasks.
+
+**Limits**
+
+- Can stumble on very tricky multi-step logic or nuanced cross-file dependencies.
+- More likely than full gpt-5 to “hallucinate” library methods that don’t exist (but still way better than nano).
+
+#### gpt-5-nano
+
+**When it shines**
+
+- Super quick “generate boilerplate” tasks:
+- Create a FastAPI endpoint skeleton.
+- Make a pandas dataframe example.
+- Write a regex for X.
+- Very cheap for iterative trial-and-error stuff.
+
+**Limits**
+
+- Reasoning depth noticeably lower — more manual correction required.
+- Not great at debugging tricky problems or explaining advanced concepts.
+- Shorter context means you can’t dump in a whole module.
+
+#### gpt-4o-mini
+
+- Better than gpt-5-nano at multi-step reasoning and edge cases.
+- Comparable to gpt-5-mini for many everyday Python tasks — especially short-to-medium ones.
+- Behind gpt-5-mini and gpt-5 in:
+- Handling very large contexts.
+- Understanding complex, intertwined logic across files.
+- Producing fully correct answers on first try for tricky bugs.
+
+#### Latency / Speed
+
+- GPT-4o-mini is very fast — close to gpt-5-nano speeds.
+- GPT-5-mini is slightly slower but still quick enough for most dev work.
+- GPT-5 is noticeably slower for small requests.
+
+#### Cost
+
+Current OpenAI pricing at the time of writing (rounded per 1M tokens):
+
+- GPT-5 (full): ~$1.25 input / ~$10.00 output
+
+- GPT-5-mini: ~$0.25 input / ~$2.00 output
+
+- GPT-4o-mini: ~$0.15 input / ~$0.60 output
+
+- GPT-5-nano: ~$0.05 input / ~$0.40 output
+
+#### Practical Usage (for a single developer)
+
+**Default to gpt-5-mini for most coding help — best cost/accuracy trade-off.**
+
+**Switch to gpt-5 only when:**
+
+- You’re stuck debugging something subtle and already tried mini.
+- You’re doing big multi-file refactors.
+- You need deeper conceptual explanation.
+
+**Use gpt-5-nano for:**
+
+- Tiny, low-risk generation tasks.
+- Rapid back-and-forth where you’ll manually review anyway.
 
 ---
 
@@ -255,6 +368,9 @@ Large files:
   - Check network connectivity and the installed OpenAI SDK version. Run from a terminal to view stack traces (easier to debug).
 - Image generation returns no image data:
   - Inspect console logs for the raw API response. Response fields vary across SDK/API versions.
+- Model switching oddities:
+  - Different models have different capabilities and token limits. Switching to a model with a smaller context window may cause long conversation histories to exceed that model's limit; consider clearing or saving/loading conversations if you need to use a model with a much smaller context window.
+  - If a model is unavailable or unsupported by your account, API requests will fail — check the error printed to the terminal.
 
 Debugging tips:
 
@@ -304,5 +420,3 @@ Follow the guidance in `CONTRIBUTING.md` (included). Summary:
 - Image handling: Pillow
 
 This project is distributed under the MIT License — see the `LICENSE` file in the repository root.
-
----
