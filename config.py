@@ -2,7 +2,14 @@
 ### MODEL SETUP ###
 ###################
 
-MODEL_VERSION = "gpt-5-mini"
+DEFAULT_MODEL_VERSION = "gpt-5-mini"
+# Available chat models (exact strings as requested)
+AVAILABLE_MODELS = [
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-4o-mini",
+]
 IMAGE_MODEL_VERSION = "gpt-image-1"
 
 ASSISTANT_NAME = "Jeeves"

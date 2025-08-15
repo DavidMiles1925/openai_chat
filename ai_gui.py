@@ -13,7 +13,7 @@ import traceback
 # Pillow for image loading & conversion to Tkinter PhotoImage
 from PIL import Image, ImageTk
 
-from config import MODEL_VERSION, ASSISTANT_NAME, IMAGE_MODEL_VERSION
+from config import DEFAULT_MODEL_VERSION, ASSISTANT_NAME, IMAGE_MODEL_VERSION, AVAILABLE_MODELS
 
 try:
     RESAMPLE_FILTER = Image.Resampling.LANCZOS
@@ -24,6 +24,14 @@ except AttributeError:
 client = OpenAI(
     api_key=os.getenv("OPENAI_KEY", "No_Key"),  # this is also the default, it can be omitted
 )
+
+# Default model: prefer the config value if present and in the list, otherwise use the first available
+_default_model = DEFAULT_MODEL_VERSION if DEFAULT_MODEL_VERSION in AVAILABLE_MODELS else AVAILABLE_MODELS[0]
+
+# Tkinter variable to hold the currently selected model for chat completions.
+# This allows the user to switch models from the GUI while preserving conversation context.
+# Note: We don't change IMAGE_MODEL_VERSION here; image generation still uses the config value.
+current_model_var = None  # will be initialized after app is created
 
 conversation = [
     {"role": "system", "content": f"You are chatting with a user. Respond helpfully. Your name is {ASSISTANT_NAME}"}
@@ -102,8 +110,11 @@ def send_message():
     # Start the waiting indicator (on main thread)
     start_waiting()
 
+    # Capture the selected model at the moment of sending so the request uses the intended model
+    selected_model = current_model_var.get()
+
     # Worker function runs in a background thread to avoid freezing the UI
-    def worker():
+    def worker(model_to_use):
         try:
             # Make a snapshot/copy of the conversation to send to the API
             with conversation_lock:
@@ -111,7 +122,7 @@ def send_message():
 
             # Use streaming to receive partial responses
             stream = client.chat.completions.create(
-                model=MODEL_VERSION,
+                model=model_to_use,
                 messages=messages_for_api,
                 stream=True
             )
@@ -186,7 +197,7 @@ def send_message():
             app.after(0, on_request_complete)
 
     # Start background thread
-    t = threading.Thread(target=worker, daemon=True)
+    t = threading.Thread(target=worker, args=(selected_model,), daemon=True)
     t.start()
 
 def export_chat():
@@ -465,6 +476,16 @@ def cleanup_after_image():
     send_button.config(state='normal')
     stop_waiting()
 
+# Model menu: provides radio entries so the user can switch models at runtime without losing conversation context
+def on_model_change():
+    # Called on the main thread when the user selects a different model.
+    selected = current_model_var.get()
+    # Optionally indicate in the chat that the model was switched (keeps conversation context intact).
+    chat_history.configure(state='normal')
+    chat_history.insert(tk.END, f"[Model switched to: {selected}]\n\n")
+    chat_history.configure(state='disabled')
+    chat_history.see(tk.END)
+
 # ------------------------------
 # Build the GUI
 # ------------------------------
@@ -472,16 +493,25 @@ def cleanup_after_image():
 # Create the main window
 app = tk.Tk()
 app.title("ChatGPT GUI")
-# removed the fixed app.minsize(600, 400) so we can compute the true minimum later
 
-# Add a menu bar with 'File' menu
+# Initialize the current_model_var as a Tkinter StringVar bound to the main app
+current_model_var = tk.StringVar(app, value=_default_model)
+
+# Add a menu bar with 'File' menu and a new 'Model' menu for selecting chat model
 menu = Menu(app)
 app.config(menu=menu)
-filemenu = Menu(menu)
+
+# File menu
+filemenu = Menu(menu, tearoff=0)
 menu.add_cascade(label="File", menu=filemenu)
 filemenu.add_command(label="Export Chat", command=export_chat)
 filemenu.add_command(label="Import File", command=import_file)
 filemenu.add_command(label="Generate Image...", command=generate_image_dialog)
+
+modelmenu = Menu(menu, tearoff=0)
+menu.add_cascade(label="Model", menu=modelmenu)
+for m in AVAILABLE_MODELS:
+    modelmenu.add_radiobutton(label=m, variable=current_model_var, value=m, command=on_model_change)
 
 # Configure grid weights so the UI resizes with the window.
 # Give the chat history the expanding weight; keep input row fixed/small.
