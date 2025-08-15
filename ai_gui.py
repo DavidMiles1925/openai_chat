@@ -227,10 +227,10 @@ def import_file():
     filepath = filedialog.askopenfilename(
         title="Import file for context",
         filetypes=[
+            ("All files", "*.*"),
             ("Text files", "*.txt;*.md"),
             ("Word documents", "*.docx"),
-            ("PDF files", "*.pdf"),
-            ("All files", "*.*")
+            ("PDF files", "*.pdf")
         ]
     )
     if not filepath:
