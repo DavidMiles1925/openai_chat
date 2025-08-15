@@ -7,32 +7,6 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 
 ---
 
-## Table of contents
-
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-  - [Python & virtualenv](#python--virtualenv)
-  - [OS-specific Tkinter / environment tips](#os-specific-tkinter--environment-tips)
-    - [Windows](#windows)
-    - [macOS](#macos)
-    - [Linux (Debian/Ubuntu / Fedora / Arch)](#linux-debianubuntu--fedora--arch)
-- [Configuration](#configuration)
-  - [config.py example](#configpy-example)
-  - [Setting the OPENAI_KEY env var](#setting-the-openai_key-env-var)
-- [Running the app](#running-the-app)
-- [Usage (UI guide)](#usage-ui-guide)
-- [File import / supported formats](#file-import--supported-formats)
-- [Image generation](#image-generation)
-- [Implementation notes & internals](#implementation-notes--internals)
-- [Troubleshooting](#troubleshooting)
-- [Security & privacy](#security--privacy)
-- [Contributing](#contributing)
-- [Suggested improvements / roadmap](#suggested-improvements--roadmap)
-- [Acknowledgements & License](#acknowledgements--license)
-
----
-
 ## Features
 
 - Chat with an OpenAI model using a desktop GUI (Tkinter).
@@ -108,9 +82,9 @@ pip install -r requirements.txt
 
 ---
 
-## OS-specific Tkinter / environment tips
+### OS-specific Tkinter / environment tips
 
-### Windows
+#### Windows
 
 - The official Python installer (python.org) includes Tkinter by default. If you see `ModuleNotFoundError: No module named 'tkinter'`, reinstall Python and ensure "tcl/tk and IDLE" is selected.
 - Temporarily set the environment variable in PowerShell:
@@ -127,7 +101,7 @@ setx OPENAI_KEY "sk-..."
 
 - On high-DPI displays, UI scaling issues can occur. Adjust Windows display scaling or add Tk scaling adjustments in code before creating the Tk root.
 
-### macOS
+#### macOS
 
 - The python.org installer usually bundles a compatible Tcl/Tk. If using Homebrew Python, you may need to install `tcl-tk` and ensure Python links to it:
 
@@ -141,7 +115,7 @@ brew install tcl-tk
 export OPENAI_KEY="sk-..."
 ```
 
-### Linux (Debian/Ubuntu / Fedora / Arch)
+#### Linux (Debian/Ubuntu / Fedora / Arch)
 
 - Debian / Ubuntu:
 
@@ -172,7 +146,7 @@ export OPENAI_KEY="sk-..."
 
 ## Configuration
 
-Create a `config.py` in the project root to control basic settings used by the app.
+`config.py` is used to control basic settings used by the app.
 
 ### config.py example
 
@@ -236,7 +210,7 @@ Notes:
 
 ---
 
-## File import / supported formats
+### File import / supported formats
 
 - Text files: `.txt`, `.md` — read as UTF-8 (with replacement on encoding errors).
 - Word documents: `.docx` — read using `python-docx` (paragraphs joined with newline).
@@ -249,16 +223,16 @@ Large files:
 
 ---
 
-## Image generation
+### Image generation
 
-- The app uses the Images API (code references model `gpt-image-1`).
+- The app uses the Images API (config references model `gpt-image-1`).
 - Sizes: 256x256, 512x512, 1024x1024.
 - The app attempts to handle responses containing either base64 (`b64_json`) or a URL and saves images to the selected folder as `image-YYYYmmdd-HHMMSS.png`.
 - Images are displayed inline; the app keeps references to Tk PhotoImage objects to prevent garbage collection.
 
 ---
 
-## Implementation notes & internals
+### Implementation notes & internals
 
 - UI built with Tkinter and `ScrolledText` for chat display.
 - Conversation is a list of message dicts with keys `role` and `content`.
