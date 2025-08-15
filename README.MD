@@ -271,34 +271,34 @@ Large files:
 
 #### gpt-5 (full model)
 
-**When it shines**
+_When it shines_
 
 - Multi-file reasoning (e.g., “Here’s my repo, fix X” and it remembers relationships between files).
 - Deep debugging of subtle logic or performance issues.
 - Refactoring big chunks of code while keeping style consistent.
 - Explaining advanced algorithms in detail before coding them.
 
-**Downsides**
+_Downsides_
 
 - More expensive per call.
 - Slower than mini/nano, so quick “one-liner” requests feel overkill.
 
 #### gpt-5-mini
 
-**When it shines**
+_When it shines_
 
 - Day-to-day Python work: writing functions, fixing bugs, writing tests.
 - Understanding short/medium snippets and producing clean solutions.
 - Good balance of cost vs correctness — often 90–95% as good as full gpt-5 for typical coding tasks.
 
-**Limits**
+_Limits_
 
 - Can stumble on very tricky multi-step logic or nuanced cross-file dependencies.
 - More likely than full gpt-5 to “hallucinate” library methods that don’t exist (but still way better than nano).
 
 #### gpt-5-nano
 
-**When it shines**
+_When it shines_
 
 - Super quick “generate boilerplate” tasks:
 - Create a FastAPI endpoint skeleton.
@@ -306,7 +306,7 @@ Large files:
 - Write a regex for X.
 - Very cheap for iterative trial-and-error stuff.
 
-**Limits**
+_Limits_
 
 - Reasoning depth noticeably lower — more manual correction required.
 - Not great at debugging tricky problems or explaining advanced concepts.
@@ -317,9 +317,9 @@ Large files:
 - Better than gpt-5-nano at multi-step reasoning and edge cases.
 - Comparable to gpt-5-mini for many everyday Python tasks — especially short-to-medium ones.
 - Behind gpt-5-mini and gpt-5 in:
-- Handling very large contexts.
-- Understanding complex, intertwined logic across files.
-- Producing fully correct answers on first try for tricky bugs.
+  &emsp - Handling very large contexts.  
+  &emsp - Understanding complex, intertwined logic across files.  
+  &emsp - Producing fully correct answers on first try for tricky bugs.
 
 #### Latency / Speed
 
