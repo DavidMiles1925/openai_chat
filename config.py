@@ -3,6 +3,7 @@
 ###################
 
 MODEL_VERSION = "gpt-5-mini"
+IMAGE_MODEL_VERSION = "gpt-image-1"
 
 ASSISTANT_NAME = "Jeeves"
 OPENING_PROMPT = f"You are chatting with a user. \

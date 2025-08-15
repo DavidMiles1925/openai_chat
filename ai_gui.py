@@ -13,7 +13,7 @@ import traceback
 # Pillow for image loading & conversion to Tkinter PhotoImage
 from PIL import Image, ImageTk
 
-from config import MODEL_VERSION, ASSISTANT_NAME
+from config import MODEL_VERSION, ASSISTANT_NAME, IMAGE_MODEL_VERSION
 
 try:
     RESAMPLE_FILTER = Image.Resampling.LANCZOS
@@ -361,7 +361,7 @@ def image_worker(prompt, size, folder):
 
         # Call Images API
         response = client.images.generate(
-            model="gpt-image-1",
+            model=IMAGE_MODEL_VERSION,
             prompt=prompt,
             size=size
         )
