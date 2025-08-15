@@ -146,7 +146,7 @@ export OPENAI_KEY="sk-..."
 
 ## Configuration
 
-`config.py` is used to control basic settings used by the app.
+`config.py` is used to control basic settings in the app.
 
 ### config.py example
 
