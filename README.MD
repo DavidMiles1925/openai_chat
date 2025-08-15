@@ -317,9 +317,9 @@ _Limits_
 - Better than gpt-5-nano at multi-step reasoning and edge cases.
 - Comparable to gpt-5-mini for many everyday Python tasks — especially short-to-medium ones.
 - Behind gpt-5-mini and gpt-5 in:
-  &emsp - Handling very large contexts.  
-  &emsp - Understanding complex, intertwined logic across files.  
-  &emsp - Producing fully correct answers on first try for tricky bugs.
+  - Handling very large contexts.
+  - Understanding complex, intertwined logic across files.
+  - Producing fully correct answers on first try for tricky bugs.
 
 #### Latency / Speed
 
