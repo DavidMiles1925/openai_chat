@@ -234,6 +234,46 @@ def read_pdf_file(path):
             text_chunks.append(text)
     return "\n\n".join(text_chunks)
 
+def read_excel_file(path):
+    """
+    Try to read Excel (.xlsx/.xls) and return a textual representation.
+    Preferred: pandas (reads all sheets). Fallback: openpyxl for .xlsx.
+    If neither present or reading fails, raises RuntimeError with guidance.
+    """
+    # First try pandas for flexible reading (handles many formats if dependencies installed)
+    try:
+        import pandas as pd
+        # sheet_name=None reads all sheets into an OrderedDict
+        sheets = pd.read_excel(path, sheet_name=None)
+        parts = []
+        for sheet_name, df in sheets.items():
+            parts.append(f"Sheet: {sheet_name}")
+            # Convert DataFrame to tab-separated values for readability
+            parts.append(df.to_csv(sep='\t', index=False))
+        return "\n\n".join(parts)
+    except Exception as pandas_err:
+        # If pandas isn't available or fails, try openpyxl (works for .xlsx)
+        try:
+            from openpyxl import load_workbook
+            wb = load_workbook(path, read_only=True, data_only=True)
+            parts = []
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+                parts.append(f"Sheet: {sheet_name}")
+                rows = []
+                for row in ws.iter_rows(values_only=True):
+                    row_text = "\t".join("" if v is None else str(v) for v in row)
+                    rows.append(row_text)
+                parts.append("\n".join(rows))
+            return "\n\n".join(parts)
+        except Exception as openpyxl_err:
+            # Provide a clear error including both exceptions to help debugging.
+            raise RuntimeError(
+                "Failed to read Excel file. pandas error: "
+                f"{pandas_err}; openpyxl error: {openpyxl_err}. "
+                "To add Excel support install pandas and openpyxl (e.g. pip install pandas openpyxl)."
+            )
+
 def import_file():
     filepath = filedialog.askopenfilename(
         title="Import file for context",
@@ -241,7 +281,8 @@ def import_file():
             ("All files", "*.*"),
             ("Text files", "*.txt;*.md"),
             ("Word documents", "*.docx"),
-            ("PDF files", "*.pdf")
+            ("PDF files", "*.pdf"),
+            ("Excel files", "*.xls;*.xlsx")
         ]
     )
     if not filepath:
@@ -255,6 +296,8 @@ def import_file():
             content = read_docx_file(filepath)
         elif ext == '.pdf':
             content = read_pdf_file(filepath)
+        elif ext in ('.xls', '.xlsx'):
+            content = read_excel_file(filepath)
         else:
             # Try text fallback for unknown extensions
             try:

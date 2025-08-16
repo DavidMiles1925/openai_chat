@@ -40,7 +40,18 @@ New: Model selection menu
 - Tkinter (usually included with Python; see OS-specific section below if missing)
 - See `requirements.txt` for Python dependencies and testing tools
 
-Install dependencies:
+### Install dependencies:
+
+All of the dependencies can be found in requirements.txt
+
+> **Curent List of Dependencies:**
+> openai>=1.0.0,<3.0.0  
+> python-docx>=0.8.11,<1.0.0  
+> pypdf>=3.7.0,<5.0.0  
+> Pillow>=9.0.0,<11.0.0  
+> pandas>=1.5.3,<2.0.0  
+> openpyxl>=3.0.10,<4.0.0  
+> xlrd>=1.2.0,<2.0.0
 
 ```bash
 python -m venv venv
