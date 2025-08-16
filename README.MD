@@ -11,7 +11,7 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 
 - Chat with an OpenAI model using a desktop GUI (Tkinter).
 - Streaming assistant responses in the chat window for a responsive feel.
-- Import files for context: `.txt`, `.md`, `.docx`, `.pdf` (preview shown and appended to conversation).
+- Import files for context: `.txt`, `.md`, `.docx`, `.pdf`, `xlsx`, and any text-based file. (preview shown and file appended to conversation).
 - Export chat history to a timestamped `.txt` file.
 - Generate images from prompts (256x256, 512x512, 1024x1024); images saved to disk and displayed inline.
 - Simple animated "Thinking..." indicator while requests are in flight.
