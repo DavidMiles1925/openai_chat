@@ -1,4 +1,4 @@
-# ChatGPT GUI (Lite)
+# GPT GUIde
 
 A lightweight desktop chat application that integrates with OpenAI models and provides a simple GUI for chatting, importing documents for context, exporting chat history, and generating images. The UI is implemented in Python using Tkinter and the OpenAI Python SDK.
 

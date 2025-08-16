@@ -9,6 +9,7 @@ from pypdf import PdfReader
 import base64
 import urllib.request
 import traceback
+import tkinter.font as tkfont
 
 # Pillow for image loading & conversion to Tkinter PhotoImage
 from PIL import Image, ImageTk
@@ -130,6 +131,8 @@ def send_message():
             # Insert assistant header once (on main thread)
             def start_assistant_message():
                 chat_history.configure(state='normal')
+                sep = "\n--- Model response ---\n"
+                chat_history.insert(tk.END, sep, "separator")
                 chat_history.insert(tk.END, f"{ASSISTANT_NAME}: ")
                 chat_history.configure(state='disabled')
                 chat_history.see(tk.END)
@@ -472,8 +475,10 @@ def show_user_prompt_ui(prompt, size):
 
 def show_assistant_image_ui(saved_filename, assistant_text):
     try:
-        # Insert assistant header and text
+        # Insert assistant header and text with separator
         chat_history.configure(state='normal')
+        sep = "\n--- Model response ---\n"
+        chat_history.insert(tk.END, sep, "separator")
         chat_history.insert(tk.END, f"{ASSISTANT_NAME}: {assistant_text}\n")
 
         # Load image via PIL
@@ -535,7 +540,7 @@ def on_model_change():
 
 # Create the main window
 app = tk.Tk()
-app.title("ChatGPT GUI")
+app.title("GPT GUIde")
 
 # Initialize the current_model_var as a Tkinter StringVar bound to the main app
 current_model_var = tk.StringVar(app, value=_default_model)
@@ -561,6 +566,7 @@ for m in AVAILABLE_MODELS:
 app.grid_rowconfigure(0, weight=1)   # chat history expands
 app.grid_rowconfigure(1, weight=0)   # input stays compact
 app.grid_rowconfigure(2, weight=0)   # status minimal
+app.grid_rowconfigure(3, weight=0)   # credit label minimal
 
 # Column 0 (main text area) expands horizontally; column 1 (send button) keeps a fixed width.
 app.grid_columnconfigure(0, weight=1)
@@ -569,6 +575,17 @@ app.grid_columnconfigure(1, weight=0, minsize=80)
 # Create a text area for the chat history
 chat_history = scrolledtext.ScrolledText(app, state='disabled', wrap=tk.WORD)
 chat_history.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky='nsew')
+
+# Configure font & tags for the separator (small italic gray)
+default_font = tkfont.nametofont("TkDefaultFont")
+sep_font = default_font.copy()
+# reduce size slightly for separator (but keep readable), set italic
+try:
+    sep_font.configure(size=max(default_font.cget("size") - 2, 8), slant='italic')
+except Exception:
+    # fallback in case certain options are not supported
+    sep_font = ("TkDefaultFont", max(default_font.cget("size") - 2, 8), "italic")
+chat_history.tag_configure("separator", font=sep_font, foreground="gray")
 
 # Create a text area for user input (smaller height)
 user_input = tk.Text(app, wrap=tk.WORD, height=4)  # <-- smaller message box
@@ -580,7 +597,16 @@ send_button.grid(row=1, column=1, padx=10, pady=10, sticky='ns')
 
 # Status label to indicate waiting/idle
 status_label = tk.Label(app, text="Idle", anchor='w')
-status_label.grid(row=2, column=0, columnspan=2, sticky='ew', padx=10, pady=(0,10))
+status_label.grid(row=2, column=0, columnspan=2, sticky='ew', padx=10, pady=(0,2))
+
+# Small italic credit label at the bottom
+credit_font = default_font.copy()
+try:
+    credit_font.configure(size=max(default_font.cget("size") - 3, 8), slant='italic')
+except Exception:
+    credit_font = ("TkDefaultFont", max(default_font.cget("size") - 3, 8), "italic")
+credit_label = tk.Label(app, text="Created by David Miles", anchor='e', font=credit_font, foreground="gray30")
+credit_label.grid(row=3, column=0, columnspan=2, sticky='ew', padx=10, pady=(0,10))
 
 # Let Tk compute requested sizes, then set the window's minimum and initial geometry
 app.update_idletasks()
