@@ -440,6 +440,10 @@ def send_message():
     t = threading.Thread(target=worker, args=(selected_model,), daemon=True)
     t.start()
 
+# ------------------------------
+# File operation functions
+# ------------------------------
+
 def export_chat():
     filename = f'chat_history-{datetime.now().strftime("%m%b%y-%H%M")}.txt'
     chat_content = chat_history.get('1.0', tk.END)
@@ -530,7 +534,6 @@ def import_file():
         if not filepath:
             return
 
-        # The rest is your same logic...
         ext = os.path.splitext(filepath)[1].lower()
         try:
             if ext in ('.txt', '.md'):
@@ -553,7 +556,6 @@ def import_file():
             chat_history.see(tk.END)
             return
 
-        # ...append to conversation and show preview as before
         with conversation_lock:
             conversation.append({"role": "user", "content": content})
         preview_limit = 1000
