@@ -66,8 +66,6 @@ pip install -r requirements.txt
 
 ## Installation
 
-### Python & virtualenv
-
 1. Clone the repo:
 
 ```bash
@@ -75,63 +73,86 @@ git clone <your-repo-url>
 cd <your-repo>
 ```
 
-2. Create and activate a virtual environment (recommended):
-
-- macOS / Linux:
-
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-- Windows (cmd):
-
-```
-python -m venv venv
-venv\Scripts\activate
-```
-
-- Windows (PowerShell):
-
-```
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-```
-
-3. Install dependencies:
+2. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
+[**Linux Instructions for installing tkinter**](#linux-debianubuntu--fedora--arch)
+
+3. Set your API Key using the instructions in the secion below titled [API Key Management](#api-key-management)
+
 ---
 
-### OS-specific Tkinter / environment tips
+### Configuration
 
-#### Windows
+`config.py` is used to control basic settings in the app.
 
-- The official Python installer (python.org) includes Tkinter by default. If you see `ModuleNotFoundError: No module named 'tkinter'`, reinstall Python and ensure "tcl/tk and IDLE" is selected.
-- Temporarily set the environment variable in PowerShell:
+### config.py example
 
-```powershell
-$env:OPENAI_KEY = "sk-..."
+```python
+# config.py
+DEFAULT_MODEL_VERSION = "gpt-5-mini"
+ASSISTANT_NAME = "Jeeves"
 ```
 
-- Persistently set (PowerShell):
+Notes related to the new Model menu:
+
+- The GUI's Model menu uses the list of available model names (see Features). The menu selection overrides the `MODEL_VERSION` runtime default for chat requests while the app is running.
+- On startup, the app will prefer the `MODEL_VERSION` from `config.py` as the initial selection if it matches one of the available menu options. Otherwise it will default to the first model in the menu.
+- Changing the selected model from the menu does not clear or alter the conversation history — it only changes which model will receive the next request.
+- Image generation still uses `IMAGE_MODEL_VERSION` from `config.py` (unchanged).
+
+---
+
+### API Key Management
+
+You can provide an OpenAI API key in two ways:
+
+1. In-app (**RECOMMENDED: You can set your API Key by clicking the `Key` Menu and Selecting `Set API Key`**)
+
+2. Environment variable (`OPENAI_KEY`)
+
+#### Behavior:
+
+- Sources the app will use for an API key (in priority order):
+
+  1. Key stored in the OS keyring (via the `keyring` Python package).
+  2. Session key if the user set a key for the current session via the Set API Key dialog (and did not choose to save it).
+  3. Environment variable OPENAI_KEY (if present). See
+
+- When you `Set API Key` in the app and choose "Remember", the key is saved into the OS keychain via `keyring`. If you elect not to remember it, the key is used for the current session only (kept in memory) and will be cleared on app restart.
+- The app validates keys before saving (makes a tiny, cheap API call).
+- The Send and Generate Image controls are only enabled when a usable key is present (session/keyring or env var).
+- If you use the `Forget API Key` menu action, the app will:
+  - Delete the key stored in the OS keychain (if any).
+  - Clear any session-in-memory key and re-initialize the API client.
+- However, if you have a persistent environment variable `OPENAI_KEY` set in your OS (for example in your shell profile or system environment), the SDK will continue to see and use that environment variable even after you forget the key in the keychain. In other words:
+  - `Forget API Key` will remove the key from the keychain and clear the session, **but it cannot and will not remove a persistent `OPENAI_KEY` environment variable**.
+  - To completely stop the app from using an API key that came from an environment variable, you must remove that environment variable from your system (see [Troubleshooting](#troubleshooting) below).
+
+---
+
+#### Optional: Setting Enviroment Variables by OS
+
+The enviroment variable that the program will look for (after checking keyring) is called `OPENAI_KEY`
+
+##### Windows
+
+_Set API Key_
 
 ```powershell
 setx OPENAI_KEY "sk-..."
 ```
 
-- On high-DPI displays, UI scaling issues can occur. Adjust Windows display scaling or add Tk scaling adjustments in code before creating the Tk root.
+_Remove API Key_
 
-#### macOS
-
-- The python.org installer usually bundles a compatible Tcl/Tk. If using Homebrew Python, you may need to install `tcl-tk` and ensure Python links to it:
-
-```bash
-brew install tcl-tk
+```powershell
+[Environment]::SetEnvironmentVariable("OPENAI_KEY", $null, "User")
 ```
+
+##### macOS
 
 - Set your API key in shell:
 
@@ -139,7 +160,15 @@ brew install tcl-tk
 export OPENAI_KEY="sk-..."
 ```
 
-#### Linux (Debian/Ubuntu / Fedora / Arch)
+##### Linux (Debian/Ubuntu / Fedora / Arch)
+
+_Set your API key:_
+
+```bash
+export OPENAI_KEY="sk-..."
+```
+
+_Install tkinter:_
 
 - Debian / Ubuntu:
 
@@ -160,56 +189,25 @@ sudo dnf install python3-tkinter
 sudo pacman -S tk
 ```
 
-- Set your API key:
+_Remove API Key_
 
-```bash
-export OPENAI_KEY="sk-..."
-```
-
----
-
-## Configuration
-
-`config.py` is used to control basic settings in the app.
-
-### config.py example
-
-```python
-# config.py
-MODEL_VERSION = "gpt-5-mini"
-ASSISTANT_NAME = "Jeeves"
-```
-
-Notes related to the new Model menu:
-
-- The GUI's Model menu uses the list of available model names (see Features). The menu selection overrides the `MODEL_VERSION` runtime default for chat requests while the app is running.
-- On startup, the app will prefer the `MODEL_VERSION` from `config.py` as the initial selection if it matches one of the available menu options. Otherwise it will default to the first model in the menu.
-- Changing the selected model from the menu does not clear or alter the conversation history — it only changes which model will receive the next request.
-- Image generation still uses `IMAGE_MODEL_VERSION` from `config.py` (unchanged).
-
-### Setting the OPENAI_KEY env var
-
-- macOS / Linux (bash/zsh):
-
-```bash
-export OPENAI_KEY="sk-..."
-```
-
-- Windows PowerShell (temporary):
-
-```powershell
-$env:OPENAI_KEY = "sk-..."
-```
-
-- Windows (persistent):
-
-```powershell
-setx OPENAI_KEY "sk-..."
-```
-
-Do not commit your API key to version control.
-
----
+- To remove a persistent export in your shell startup files (~/.bashrc, ~/.profile, ~/.bash_profile, ~/.zshrc):
+  - Manually open the file and remove the line like: export OPENAI_KEY="…"
+  - Or remove with sed (make a backup first):
+    ```bash
+    cp ~/.bashrc ~/.bashrc.bak
+    sed -i '/^export OPENAI_KEY=/d' ~/.bashrc
+    ```
+    Then log out/in or source the file:
+    ```bash
+    source ~/.bashrc
+    ```
+- If it was set in /etc/environment or ~/.pam_environment:
+  ```bash
+  sudo cp /etc/environment /etc/environment.bak
+  sudo sed -i '/^OPENAI_KEY=/d' /etc/environment
+  ```
+  Then log out/in for changes to take effect
 
 ## Running the app
 
@@ -371,6 +369,16 @@ Current OpenAI pricing at the time of writing (rounded per 1M tokens):
 
 - Authentication / invalid API key:
   - Ensure `OPENAI_KEY` is set and valid (no stray quotes, no trailing spaces).
+- Forget API Key appears ineffective after restart:
+  - If you previously set a persistent environment variable OPENAI_KEY, the app will still pick that up after you forget the key in the keychain. Deleting the keychain entry does not delete environment variables. Remove the OPENAI_KEY environment variable from your system to fully stop the app from seeing that key.
+  - To clear the environment variable:
+    - Windows (PowerShell session only): $env:OPENAI_KEY = $null
+    - Windows (remove persistent user variable, PowerShell):
+      [Environment]::SetEnvironmentVariable("OPENAI_KEY", $null, "User")
+      (You may need to sign out / sign in or restart to fully remove persistent variables from new sessions.)
+  - macOS / Linux (bash/zsh): Remove or edit any lines in ~/.bashrc, ~/.bash_profile or ~/.zshrc that export OPENAI_KEY; then restart the terminal or source the file.
+- Keyring backend issues on Linux:
+  - On some minimal Linux desktop setups no secret service may be installed; keyring can fall back to an insecure local file backend. If you rely on secure storage, install Secret Service / GNOME Keyring / KWallet support. Optionally install the secretstorage package to improve Secret Service integration (may require dbus).
 - `ModuleNotFoundError: No module named 'tkinter'`:
   - Follow the OS-specific instructions above to install Tk support.
 - PDF imports produce no text:
