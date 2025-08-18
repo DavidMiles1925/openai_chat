@@ -16,20 +16,10 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 - Generate images from prompts (256x256, 512x512, 1024x1024); images saved to disk and displayed inline.
 - Simple animated "Thinking..." indicator while requests are in flight.
 - Threaded networking so the UI remains responsive.
-- Simple configuration via `config.py`.
 - Model selection menu: switch which chat model you are talking to at runtime without losing conversation context.
-
-New: Model selection menu
-
-- A new top-level "Model" menu lets the user pick the active chat model from the GUI.
-- The available models (exact string values offered in the menu) are:
-  - gpt-5
-  - gpt-5-mini
-  - gpt-5-nano
-  - gpt-4o-mini
-- Switching models preserves the conversation context: imported files and previous messages remain in the shared conversation, so the new model receives the full conversation history for subsequent requests.
-- The currently selected model is captured at the moment you hit "Send" and used for that request.
-- Image generation still uses the configured image model (IMAGE_MODEL_VERSION) from `config.py` and is not affected by this menu.
+  - Switching models preserves the conversation context: imported files and previous messages remain in the shared conversation, so the new model receives the full conversation history for subsequent requests.
+- Simple configuration via `config.py`.
+- In-app management of API Key through menu - Set, remove, or test API Key
 
 ---
 
