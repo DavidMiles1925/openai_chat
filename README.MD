@@ -37,8 +37,8 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 1. Clone the repo:
 
 ```bash
-git clone <your-repo-url>
-cd <your-repo>
+git clone https://github.com/DavidMiles1925/openai_chat
+cd openai_chat
 ```
 
 2. Install dependencies:
@@ -82,7 +82,7 @@ You can provide an OpenAI API key in two ways:
 With virtualenv active and config set:
 
 ```bash
-python main.py
+python ai_gui.py
 ```
 
 The GUI will open. Type messages in the bottom input area and press "Send".

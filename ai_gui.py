@@ -421,12 +421,15 @@ def send_message():
                 conversation.append({"role": "assistant", "content": assistant_full})
 
         except Exception as e:
-            def show_error():
+            print(e.__cause__)
+            def show_error(err=e):  # bind e into default arg
                 chat_history.configure(state='normal')
-                chat_history.insert(tk.END, "Error: " + str(e) + "\n\n")
+                chat_history.insert(tk.END, "Error: " + str(err) + "\n\n")
                 chat_history.configure(state='disabled')
                 chat_history.see(tk.END)
+
             app.after(0, show_error)
+
 
         finally:
             def on_request_complete():
@@ -502,59 +505,67 @@ def read_excel_file(path):
             )
 
 def import_file():
-    filepath = filedialog.askopenfilename(
-        title="Import file for context",
-        filetypes=[
-            ("All files", "*.*"),
-            ("Text files", "*.txt;*.md"),
-            ("Word documents", "*.docx"),
-            ("PDF files", "*.pdf"),
-            ("Excel files", "*.xls;*.xlsx")
-        ]
-    )
-    if not filepath:
-        return
-
-    ext = os.path.splitext(filepath)[1].lower()
     try:
-        if ext in ('.txt', '.md'):
-            content = read_text_file(filepath)
-        elif ext == '.docx':
-            content = read_docx_file(filepath)
-        elif ext == '.pdf':
-            content = read_pdf_file(filepath)
-        elif ext in ('.xls', '.xlsx'):
-            content = read_excel_file(filepath)
-        else:
-            try:
+        # Make sure main window is visible & focused for macOS
+        try:
+            app.update()
+            app.lift()
+            app.focus_force()
+        except Exception:
+            pass
+
+        filepath = filedialog.askopenfilename(
+            parent=app,
+            title="Import file for context",
+            initialdir=os.getcwd(),
+            filetypes=[
+                ("All files", "*.*"),
+                ("Text files", ("*.txt", "*.md")),   # use tuple for mac compatibility
+                ("Word documents", ("*.docx",)),
+                ("PDF files", ("*.pdf",)),
+                ("Excel files", ("*.xls", "*.xlsx"))
+            ]
+        )
+        print("askopenfilename returned:", repr(filepath))
+        if not filepath:
+            return
+
+        # The rest is your same logic...
+        ext = os.path.splitext(filepath)[1].lower()
+        try:
+            if ext in ('.txt', '.md'):
                 content = read_text_file(filepath)
-            except Exception:
-                raise RuntimeError("Unsupported file type and not readable as text.")
-    except Exception as e:
+            elif ext == '.docx':
+                content = read_docx_file(filepath)
+            elif ext == '.pdf':
+                content = read_pdf_file(filepath)
+            elif ext in ('.xls', '.xlsx'):
+                content = read_excel_file(filepath)
+            else:
+                try:
+                    content = read_text_file(filepath)
+                except Exception:
+                    raise RuntimeError("Unsupported file type and not readable as text.")
+        except Exception as e:
+            chat_history.configure(state='normal')
+            chat_history.insert(tk.END, f"Error importing file {os.path.basename(filepath)}: {e}\n\n")
+            chat_history.configure(state='disabled')
+            chat_history.see(tk.END)
+            return
+
+        # ...append to conversation and show preview as before
+        with conversation_lock:
+            conversation.append({"role": "user", "content": content})
+        preview_limit = 1000
+        preview = content if len(content) <= preview_limit else content[:preview_limit] + "\n...[truncated preview]"
         chat_history.configure(state='normal')
-        chat_history.insert(tk.END, f"Error importing file {os.path.basename(filepath)}: {e}\n\n")
+        chat_history.insert(tk.END, f"You (imported {os.path.basename(filepath)}):\n{preview}\n\n")
         chat_history.configure(state='disabled')
         chat_history.see(tk.END)
-        return
 
-    max_chars_warn = 200_000
-    if len(content) > max_chars_warn:
-        chat_history.configure(state='normal')
-        chat_history.insert(tk.END,
-                            f"Warning: imported file is very large ({len(content)} chars). "
-                            "You may want to summarize or split it before sending to the model.\n\n")
-        chat_history.configure(state='disabled')
-        chat_history.see(tk.END)
-
-    with conversation_lock:
-        conversation.append({"role": "user", "content": content})
-
-    preview_limit = 1000
-    preview = content if len(content) <= preview_limit else content[:preview_limit] + "\n...[truncated preview]"
-    chat_history.configure(state='normal')
-    chat_history.insert(tk.END, f"You (imported {os.path.basename(filepath)}):\n{preview}\n\n")
-    chat_history.configure(state='disabled')
-    chat_history.see(tk.END)
+    except Exception as exc:
+        print("import_file exception:", traceback.format_exc())
+        messagebox.showerror("Import Error", f"Error opening file dialog or importing file:\n\n{exc}")
 
 # ------------------------------
 # Image generation functions
