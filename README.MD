@@ -40,28 +40,6 @@ New: Model selection menu
 - Tkinter (usually included with Python; see OS-specific section below if missing)
 - See `requirements.txt` for Python dependencies and testing tools
 
-### Install dependencies:
-
-All of the dependencies can be found in requirements.txt
-
-> **Curent List of Dependencies:**
-> openai>=1.0.0,<3.0.0  
-> python-docx>=0.8.11,<1.0.0  
-> pypdf>=3.7.0,<5.0.0  
-> Pillow>=9.0.0,<11.0.0  
-> pandas>=1.5.3,<2.0.0  
-> openpyxl>=3.0.10,<4.0.0  
-> xlrd>=1.2.0,<2.0.0
-
-```bash
-python -m venv venv
-source venv/bin/activate   # macOS / Linux
-# on Windows (PowerShell):
-# .\venv\Scripts\Activate.ps1
-
-pip install -r requirements.txt
-```
-
 ---
 
 ## Installation
@@ -87,20 +65,15 @@ pip install -r requirements.txt
 
 ### Configuration
 
+#### Configuring the program
+
 `config.py` is used to control basic settings in the app.
 
-### config.py example
+#### Available Models
 
-```python
-# config.py
-DEFAULT_MODEL_VERSION = "gpt-5-mini"
-ASSISTANT_NAME = "Jeeves"
-```
-
-Notes related to the new Model menu:
-
-- The GUI's Model menu uses the list of available model names (see Features). The menu selection overrides the `MODEL_VERSION` runtime default for chat requests while the app is running.
-- On startup, the app will prefer the `MODEL_VERSION` from `config.py` as the initial selection if it matches one of the available menu options. Otherwise it will default to the first model in the menu.
+- The model can be switched via the `Model` menu.
+- The GUI's Model menu uses the list of available model names (see Features). The menu selection overrides the `DEFAUL_MODEL_VERSION` runtime default for chat requests while the app is running. You can update the list of models in the `config.py` file.
+- On startup, the app will prefer the `DEFAULT_MODEL_VERSION` from `config.py` as the initial selection if it matches one of the available menu options. Otherwise it will default to the first model in the menu.
 - Changing the selected model from the menu does not clear or alter the conversation history — it only changes which model will receive the next request.
 - Image generation still uses `IMAGE_MODEL_VERSION` from `config.py` (unchanged).
 
