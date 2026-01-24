@@ -131,6 +131,14 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
   - Remove API Key: Clears the API key.
   - Test API Key: Sends small API call to validate the key.
 
+### Switching Models
+
+- The model can be switched via the `Model` menu.
+  - Changing the selected model from the menu does not clear or alter the conversation history — it only changes which model will receive the next request.
+  - The GUI's Model menu uses the list of available model names. See the [Model Guide](#model-guide-which-to-choose)
+  - On startup, the app will prefer the `DEFAULT_MODEL_VERSION` from `config.py` as the initial selection if it matches one of the available menu options.
+  - Image generation still uses `IMAGE_MODEL_VERSION` from `config.py` (unchanged).
+
 ### File import / supported formats
 
 - Text files: `.txt`, `.md` — read as UTF-8 (with replacement on encoding errors).
