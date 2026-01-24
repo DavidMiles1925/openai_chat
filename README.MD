@@ -131,14 +131,17 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
 
 ### File import / supported formats
 
-- Text files: `.txt`, `.md` — read as UTF-8 (with replacement on encoding errors).
-- Word documents: `.docx` — read using `python-docx` (paragraphs joined with newline).
-- PDF: `.pdf` — text extracted per page with `pypdf` and joined with double newlines.
-- Unknown extensions: attempt to read as text and display an error if not readable.
-
 - The app warns if a file exceeds an arbitrary threshold (default ~200,000 characters in code). Models have token limits; consider summarizing or chunking large files before sending.
 - Imported documents are appended as a user message so the model can use them as context for subsequent messages.
 - The preview for imported files is truncated beyond a limit (configurable in code).
+
+> **File Import Methodology**
+>
+> - Text files: `.txt`, `.md` — read as UTF-8 (with replacement on encoding errors).
+> - Word documents: `.docx` — read using `python-docx` (paragraphs joined with newline).
+> - PDF: `.pdf` — text extracted per page with `pypdf` and joined with double newlines.
+> - Excel: `.xlsx` — read using `pandas` and `openpyxl`.
+> - Unknown extensions: attempt to read as text and display an error if not readable.
 
 ### Image generation
 
