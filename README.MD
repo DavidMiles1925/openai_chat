@@ -109,7 +109,7 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
 - Send button: disabled while a request is in progress.
 - Status label: shows "Idle" or "Thinking..." with animated dots.
 - Menu → File:
-  - Export Chat: saves a timestamped `.txt` file containing the chat contents.
+  - Export Chat: saves a timestamped `.txt` file containing the chat contents. Saves the file in the directory the program was run from.
   - Import File: choose a `.txt`, `.md`, `.docx`, or `.pdf`. The content is appended to the conversation as a user message, and a truncated preview is shown in the chat.
   - Generate Image...: open an image prompt dialog to generate images (saved to folder and inserted into chat).
 - Menu → Model:
