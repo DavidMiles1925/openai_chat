@@ -100,16 +100,6 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
 
 ---
 
-## Available Models
-
-- The model can be switched via the `Model` menu.
-  - Changing the selected model from the menu does not clear or alter the conversation history — it only changes which model will receive the next request.
-  - The GUI's Model menu uses the list of available model names. See the [Model Guide](#model-guide-which-to-choose)
-  - On startup, the app will prefer the `DEFAULT_MODEL_VERSION` from `config.py` as the initial selection if it matches one of the available menu options.
-  - Image generation still uses `IMAGE_MODEL_VERSION` from `config.py` (unchanged).
-
----
-
 ## Using the App (UI guide)
 
 ### Interface
