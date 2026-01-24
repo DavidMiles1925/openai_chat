@@ -374,13 +374,7 @@ _Remove API Key_
 - Background threads handle network requests to keep the UI responsive.
 - A `threading.Lock` (`conversation_lock`) protects access to the shared conversation list.
 - Streaming is implemented via `stream=True` from the OpenAI client and appends partial "delta" content to the chat widget as it arrives.
-- For better testability, see `file_utils.py` (in repository root), which provides file-reading utilities used by the GUI. You may import that module from `main.py`.
 - The Model menu uses Tk radio menu entries bound to a Tkinter StringVar. The selected model's value is captured when sending so the intended model is used for that request.
-
-### Debugging tips:
-
-- Run `python ai_gui.py` from a terminal to see printed stack traces and debug messages.
-- Add logging or temporary print statements to background threads to inspect API responses.
 
 ---
 
