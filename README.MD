@@ -104,22 +104,22 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
 
 ### Interface
 
-- Chat area: top pane shows the conversation (read-only). Assistant messages stream into this area as they arrive.
-- Input box: type your message in the lower text box and click "Send".
-- Send button: disabled while a request is in progress.
-- Status label: shows "Idle" or "Thinking..." with animated dots.
-- Menu → File:
-  - Export Chat: saves a timestamped `.txt` file containing the chat contents. Saves the file in the directory the program was run from.
-  - Import File: choose a `.txt`, `.md`, `.docx`, or `.pdf`. The content is appended to the conversation as a user message, and a truncated preview is shown in the chat.
-  - Generate Image...: open an image prompt dialog to generate images (saved to folder and inserted into chat).
-- Menu → Model:
+- **Chat area:** top pane shows the conversation (read-only). Assistant messages stream into this area as they arrive.
+- **Input box:** type your message in the lower text box and click "Send".
+- **Send button:** disabled while a request is in progress.
+- **Status label**: shows "Idle" or "Thinking..." with animated dots.
+- **Menu → File:**
+  - _Export Chat:_ saves a timestamped `.txt` file containing the chat contents. Saves the file in the directory the program was run from.
+  - _Import File:_ choose a `.txt`, `.md`, `.docx`, or `.pdf`. The content is appended to the conversation as a user message, and a truncated preview is shown in the chat.
+  - _Generate Image...:_ open an image prompt dialog to generate images (saved to folder and inserted into chat).
+- **Menu → Model:**
   - Select which chat model to use for subsequent messages.
   - Available models (menu items): gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini.
   - The selected model is used for requests when you press "Send". The app keeps the conversation intact when switching models; the next model receives the full conversation history.
-- Menu → Key:
-  - Set API Key: Sets the API key with option to use only for session of to persist.
-  - Remove API Key: Clears the API key.
-  - Test API Key: Sends small API call to validate the key.
+- **Menu → Key:**
+  - _Set API Key:_ Sets the API key with option to use only for session of to persist.
+  - _Remove API Key:_ Clears the API key.
+  - _Test API Key:_ Sends small API call to validate the key.
 
 ### Switching Models
 
