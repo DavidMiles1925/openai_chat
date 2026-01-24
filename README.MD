@@ -344,6 +344,7 @@ _Remove API Key_
 
 - Authentication / invalid API key:
   - Ensure `OPENAI_KEY` is set and valid (no stray quotes, no trailing spaces).
+  - Ensure your API key has funds available.
 - Forget API Key appears ineffective after restart:
   - If you previously set a persistent environment variable OPENAI_KEY, the app will still pick that up after you forget the key in the keychain. Deleting the keychain entry does not delete environment variables. Remove the OPENAI_KEY environment variable from your system to fully stop the app from seeing that key.
   - To clear the environment variable:
@@ -378,7 +379,7 @@ _Remove API Key_
 
 ### Debugging tips:
 
-- Run `python main.py` from a terminal to see printed stack traces and debug messages.
+- Run `python ai_gui.py` from a terminal to see printed stack traces and debug messages.
 - Add logging or temporary print statements to background threads to inspect API responses.
 
 ---
