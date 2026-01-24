@@ -50,7 +50,7 @@ cd openai_chat
 pip install -r requirements.txt
 ```
 
-> [_Linux Instructions for installing tkinter (only if it is not included with your installation of python_](#linux-debianubuntu--fedora--arch)
+> [_Linux Instructions for installing tkinter (only if it is not included with your installation of python)_](#linux-debianubuntu--fedora--arch)
 
 3. (Optional) If you'd like to change any settings, configure the app using the information in [Configuring the Program](#configuring-the-program)
 
