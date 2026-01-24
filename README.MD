@@ -27,7 +27,7 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 ## Requirements
 
 - Python 3.8+ (3.10+ recommended)
-- Network access to the OpenAI API
+- Network access to the OpenAI API and an API key (see [OpenAI Docs](https://platform.openai.com/docs/quickstart))
 - Tkinter (usually included with Python; see OS-specific section below if missing)
 - See `requirements.txt` for Python dependencies and testing tools
 
