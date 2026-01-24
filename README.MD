@@ -80,7 +80,7 @@ You can provide the app with an OpenAI API key in two ways:
 
 **Option 1. In-app (RECOMMENDED: Within the app, click the `Key` Menu and select `Set API Key`**)
 
-Option 2. (ONLY IF you need to conceal the key from the user.) Environment variable (`OPENAI_KEY`)
+Option 2. (ONLY IF you need to conceal the key from the user.) Environment variable (`OPENAI_KEY`). See [Advanced API Key Management](#advanced-api-key-management)
 
 ---
 
