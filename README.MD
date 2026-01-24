@@ -12,6 +12,7 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 - Chat with an OpenAI model using a desktop GUI (Tkinter).
 - Streaming assistant responses in the chat window for a responsive feel.
 - Import files for context: `.txt`, `.md`, `.docx`, `.pdf`, `xlsx`, and any text-based file. (preview shown and file appended to conversation).
+- Any unsupported files the program will attempt to read as a text file and give and error if unsuccessful.
 - Export chat history to a timestamped `.txt` file.
 - Generate images from prompts (256x256, 512x512, 1024x1024); images saved to disk and displayed inline.
 - Simple animated "Thinking..." indicator while requests are in flight.
@@ -34,6 +35,8 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 
 ## Installation
 
+### Installation Intructions
+
 1. Clone the repo:
 
 ```bash
@@ -49,25 +52,55 @@ pip install -r requirements.txt
 
 [**Linux Instructions for installing tkinter**](#linux-debianubuntu--fedora--arch)
 
-3. Set your API Key using the instructions in the secion below titled [API Key Management](#set-the-api-key)
+3. (Optional) If you'd like to change any settings, configure the app using the information in [Configuring the Program](#configuring-the-program)
+
+4. Run the program using the commands in [Running the App](#running-the-app)
+
+5. _IMPORTANT!!_ Set your API Key using the instructions in the section below titled [Set the API Key](#set-the-api-key)
 
 ---
 
-## Configuration
+### Running the App
 
-### Configuring the program
+In the console:
 
-`config.py` is used to control basic settings in the app.
+```bash
+python ai_gui.py
+```
+
+The console will open and there will be a brief pause as the program loads. The GUI will then open. Be sure to [set your API key](#set-the-api-key), then type messages in the bottom input area and press "Send".
+
+---
 
 ### Set the API Key
 
-You can provide an OpenAI API key in two ways:
+> _NOTE: You will need an active OpenAI key. See the [OpenAI Quickstart Page](https://platform.openai.com/docs/quickstart) for more information._
 
-1. In-app (**RECOMMENDED: You can set your API Key by clicking the `Key` Menu and Selecting `Set API Key`**)
+You can provide the app with an OpenAI API key in two ways:
 
-2. Environment variable (`OPENAI_KEY`)
+**Option 1. In-app (RECOMMENDED: Within the app, click the `Key` Menu and select `Set API Key`**)
 
-### Available Models
+Option 2. (ONLY IF you need to conceal the key from the user.) Environment variable (`OPENAI_KEY`)
+
+---
+
+### Configuring the Program
+
+`config.py` is used to control basic settings in the app.
+
+> _NOTE: All model names must match [OpenAI documentaion](https://platform.openai.com/docs/pricing) EXACTLY!_
+
+| **Constant**              | **Description**                                                                                            | **Default Value**                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **DEFAULT_MODEL_VERSION** | The model that will be selected for use when the program is opened.                                        | gpt-5-mini                                                                     |
+| **AVAILABLE_MODELS**      | The models that will appear in the list of chat models to choose from.                                     | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
+| **IMAGE_MODEL_VERSION**   | The model that will be used for image generation.                                                          | gpt-image-1                                                                    |
+| **ASSISTANT_NAME**        | This will be what the agent refers to itself as.                                                           | Jeeves                                                                         |
+| **OPENING_PROMPT**        | This is how the model is told to behave. This is how you can tailor the tone and feel of the conversation. | You are chatting with a user. Respond helpfully. Your name is {ASSISTANT_NAME} |
+
+---
+
+## Available Models
 
 - The model can be switched via the `Model` menu.
   - Changing the selected model from the menu does not clear or alter the conversation history — it only changes which model will receive the next request.
@@ -77,19 +110,7 @@ You can provide an OpenAI API key in two ways:
 
 ---
 
-## Running the app
-
-With virtualenv active and config set:
-
-```bash
-python ai_gui.py
-```
-
-The GUI will open. Type messages in the bottom input area and press "Send".
-
----
-
-## Usage (UI guide)
+## Using the App (UI guide)
 
 ### Interface
 
@@ -130,101 +151,6 @@ The GUI will open. Type messages in the bottom input area and press "Send".
 - Image generation is not affected by the Model menu and continues to use `IMAGE_MODEL_VERSION` from `config.py`.
 
 ---
-
-## API Key Management
-
-### App Behavior
-
-- Sources the app will use for an API key (in priority order):
-
-  1. Key stored in the OS keyring (via the `keyring` Python package).
-  2. Session key if the user set a key for the current session via the Set API Key dialog (and did not choose to save it).
-  3. Environment variable OPENAI_KEY (if present). See
-
-- When you `Set API Key` in the app and choose "Remember", the key is saved into the OS keychain via `keyring`. If you elect not to remember it, the key is used for the current session only (kept in memory) and will be cleared on app restart.
-- The app validates keys before saving (makes a tiny, cheap API call).
-- The Send and Generate Image controls are only enabled when a usable key is present (session/keyring or env var).
-- If you use the `Forget API Key` menu action, the app will:
-  - Delete the key stored in the OS keychain (if any).
-  - Clear any session-in-memory key and re-initialize the API client.
-- However, if you have a persistent environment variable `OPENAI_KEY` set in your OS (for example in your shell profile or system environment), the SDK will continue to see and use that environment variable even after you forget the key in the keychain. In other words:
-  - `Forget API Key` will remove the key from the keychain and clear the session, **but it cannot and will not remove a persistent `OPENAI_KEY` environment variable**.
-  - To completely stop the app from using an API key that came from an environment variable, you must remove that environment variable from your system (see [Troubleshooting](#troubleshooting) below).
-
-### Setting Enviroment Variables by OS
-
-The enviroment variable that the program will look for (after checking keyring) is called `OPENAI_KEY`
-
-#### Windows
-
-_Set API Key_
-
-```powershell
-setx OPENAI_KEY "sk-..."
-```
-
-_Remove API Key_
-
-```powershell
-[Environment]::SetEnvironmentVariable("OPENAI_KEY", $null, "User")
-```
-
-#### macOS
-
-- Set your API key in shell:
-
-```bash
-export OPENAI_KEY="sk-..."
-```
-
-#### Linux (Debian/Ubuntu / Fedora / Arch)
-
-_Set your API key:_
-
-```bash
-export OPENAI_KEY="sk-..."
-```
-
-_Install tkinter:_
-
-- Debian / Ubuntu:
-
-```bash
-sudo apt update
-sudo apt install python3-tk
-```
-
-- Fedora:
-
-```bash
-sudo dnf install python3-tkinter
-```
-
-- Arch:
-
-```bash
-sudo pacman -S tk
-```
-
-_Remove API Key_
-
-- To remove a persistent export in your shell startup files (~/.bashrc, ~/.profile, ~/.bash_profile, ~/.zshrc):
-  - Manually open the file and remove the line like: export OPENAI_KEY="…"
-  - Or remove with sed (make a backup first):
-    ```bash
-    cp ~/.bashrc ~/.bashrc.bak
-    sed -i '/^export OPENAI_KEY=/d' ~/.bashrc
-    ```
-    Then log out/in or source the file:
-    ```bash
-    source ~/.bashrc
-    ```
-- If it was set in /etc/environment or ~/.pam_environment:
-  ```bash
-  sudo cp /etc/environment /etc/environment.bak
-  sudo sed -i '/^OPENAI_KEY=/d' /etc/environment
-  ```
-  Then log out/in for changes to take effect
 
 ## Model Guide: Which to Choose
 
@@ -314,6 +240,102 @@ Current OpenAI pricing at the time of writing (rounded per 1M tokens):
 - Rapid back-and-forth where you’ll manually review anyway.
 
 ---
+
+## Advanced API Key Management
+
+### Setting Enviroment Variables by OS
+
+The enviroment variable that the program will look for (after checking keyring) is called `OPENAI_KEY`
+
+#### Windows
+
+_Set API Key_
+
+```powershell
+setx OPENAI_KEY "sk-..."
+```
+
+_Remove API Key_
+
+```powershell
+[Environment]::SetEnvironmentVariable("OPENAI_KEY", $null, "User")
+```
+
+#### macOS
+
+- Set your API key in shell:
+
+```bash
+export OPENAI_KEY="sk-..."
+```
+
+#### Linux (Debian/Ubuntu / Fedora / Arch)
+
+_Set your API key:_
+
+```bash
+export OPENAI_KEY="sk-..."
+```
+
+_Install tkinter:_
+
+- Debian / Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install python3-tk
+```
+
+- Fedora:
+
+```bash
+sudo dnf install python3-tkinter
+```
+
+- Arch:
+
+```bash
+sudo pacman -S tk
+```
+
+_Remove API Key_
+
+- To remove a persistent export in your shell startup files (~/.bashrc, ~/.profile, ~/.bash_profile, ~/.zshrc):
+  - Manually open the file and remove the line like: export OPENAI_KEY="…"
+  - Or remove with sed (make a backup first):
+    ```bash
+    cp ~/.bashrc ~/.bashrc.bak
+    sed -i '/^export OPENAI_KEY=/d' ~/.bashrc
+    ```
+    Then log out/in or source the file:
+    ```bash
+    source ~/.bashrc
+    ```
+- If it was set in /etc/environment or ~/.pam_environment:
+
+  ```bash
+  sudo cp /etc/environment /etc/environment.bak
+  sudo sed -i '/^OPENAI_KEY=/d' /etc/environment
+  ```
+
+  Then log out/in for changes to take effect
+
+  ### App Behavior
+
+- Sources the app will use for an API key (in priority order):
+  1. Key stored in the OS keyring (via the `keyring` Python package).
+  2. Session key if the user set a key for the current session via the Set API Key dialog (and did not choose to save it).
+  3. Environment variable OPENAI_KEY (if present). See
+
+- When you `Set API Key` in the app and choose "Remember", the key is saved into the OS keychain via `keyring`. If you elect not to remember it, the key is used for the current session only (kept in memory) and will be cleared on app restart.
+- The app validates keys before saving (makes a tiny, cheap API call).
+- The Send and Generate Image controls are only enabled when a usable key is present (session/keyring or env var).
+- If you use the `Forget API Key` menu action, the app will:
+  - Delete the key stored in the OS keychain (if any).
+  - Clear any session-in-memory key and re-initialize the API client.
+- However, if you have a persistent environment variable `OPENAI_KEY` set in your OS (for example in your shell profile or system environment), the SDK will continue to see and use that environment variable even after you forget the key in the keychain. In other words:
+  - `Forget API Key` will remove the key from the keychain and clear the session, **but it cannot and will not remove a persistent `OPENAI_KEY` environment variable**.
+  - To completely stop the app from using an API key that came from an environment variable, you must remove that environment variable from your system (see [Troubleshooting](#troubleshooting) below).
 
 ## Troubleshooting
 
