@@ -93,15 +93,15 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
 
 > _NOTE: All model names must match [OpenAI documentaion](https://platform.openai.com/docs/pricing) EXACTLY!_
 
-| **Constant**                 | **Description**                                                                                            | **Default Value**                                                              |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| **DEFAULT_MODEL_VERSION**    | The model that will be selected for use when the program is opened.                                        | gpt-5-mini                                                                     |
-| **AVAILABLE_MODELS**         | The models that will appear in the list of chat models to choose from.                                     | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
-| **VISION_CAPABLE_MODELS**    | Models that can accept images as uploads.                                                                  | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
-| **IMAGE_MODEL_VERSION**      | The model that will be used for image generation.                                                          | gpt-image-1                                                                    |
-| MAX_UPLOADED_IMAGE_DIMENSION | The maximum dimension for uplodaed images. Images will be compressed to this size.                         | 500                                                                            |
-| **ASSISTANT_NAME**           | This will be what the agent refers to itself as.                                                           | Jeeves                                                                         |
-| **OPENING_PROMPT**           | This is how the model is told to behave. This is how you can tailor the tone and feel of the conversation. | You are chatting with a user. Respond helpfully. Your name is {ASSISTANT_NAME} |
+| **Constant**                     | **Description**                                                                                            | **Default Value**                                                              |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **DEFAULT_MODEL_VERSION**        | The model that will be selected for use when the program is opened.                                        | gpt-5-mini                                                                     |
+| **AVAILABLE_MODELS**             | The models that will appear in the list of chat models to choose from.                                     | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
+| **VISION_CAPABLE_MODELS**        | Models that can accept images as uploads.                                                                  | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
+| **IMAGE_MODEL_VERSION**          | The model that will be used for image generation.                                                          | gpt-image-1                                                                    |
+| **MAX_UPLOADED_IMAGE_DIMENSION** | The maximum dimension for uplodaed images. Images will be compressed to this size.                         | 500                                                                            |
+| **ASSISTANT_NAME**               | This will be what the agent refers to itself as.                                                           | Jeeves                                                                         |
+| **OPENING_PROMPT**               | This is how the model is told to behave. This is how you can tailor the tone and feel of the conversation. | You are chatting with a user. Respond helpfully. Your name is {ASSISTANT_NAME} |
 
 ---
 
