@@ -10,7 +10,11 @@ AVAILABLE_MODELS = [
     "gpt-5-nano",
     "gpt-4o-mini",
 ]
+VISION_CAPABLE_MODELS = {"gpt-4o-mini", "gpt-4o", "gpt-5", "gpt-5-mini"}
+
 IMAGE_MODEL_VERSION = "gpt-image-1"
+
+MAX_UPLOADED_IMAGE_DIMENSION = 500
 
 ASSISTANT_NAME = "Jeeves"
 OPENING_PROMPT = f"You are chatting with a user. \

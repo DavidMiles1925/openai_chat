@@ -10,6 +10,7 @@ import base64
 import urllib.request
 import traceback
 import tkinter.font as tkfont
+from io import BytesIO
 
 # Pillow for image loading & conversion to Tkinter PhotoImage
 from PIL import Image, ImageTk
@@ -21,7 +22,7 @@ except Exception as e:
     keyring = None
     print("Warning: keyring module not available. Install with: pip install keyring")
 
-from config import DEFAULT_MODEL_VERSION, ASSISTANT_NAME, IMAGE_MODEL_VERSION, AVAILABLE_MODELS
+from config import DEFAULT_MODEL_VERSION, ASSISTANT_NAME, IMAGE_MODEL_VERSION, AVAILABLE_MODELS, MAX_UPLOADED_IMAGE_DIMENSION
 
 try:
     RESAMPLE_FILTER = Image.Resampling.LANCZOS
@@ -307,6 +308,203 @@ anim_dots = 0
 image_refs = []
 default_image_folder = os.getcwd()
 
+# === Image input (vision) state ===
+# attached_images will hold dicts: {"orig_path":..., "bytes":..., "mime":...}
+attached_images = []  # list of compressed image dicts selected to include with the next message
+
+def model_supports_images(model_name):
+    # Heuristic: support known vision models
+    name = (model_name or "").lower()
+    return (name in {m.lower() for m in VISION_CAPABLE_MODELS}) or ("4o" in name)
+
+def compress_image_to_jpeg_bytes(path, max_dim=500, quality=75):
+    """
+    Open image at path, resize so max(width,height) <= max_dim, convert to RGB
+    and save as JPEG into bytes. Returns (bytes, mime, was_resized). Raises on failure.
+    """
+    try:
+        with Image.open(path) as img:
+            w, h = img.size
+            max_side = max(w, h)
+            was_resized = max_side > max_dim
+            if was_resized:
+                ratio = max_dim / float(max_side)
+                new_size = (int(w * ratio), int(h * ratio))
+                img = img.resize(new_size, resample=RESAMPLE_FILTER)
+            else:
+                img = img.copy()
+
+            # Convert to RGB to save as JPEG (flatten alpha if present)
+            if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                background = Image.new("RGB", img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1])  # paste using alpha channel as mask
+                img = background
+            else:
+                img = img.convert("RGB")
+
+            buf = BytesIO()
+            img.save(buf, format="JPEG", quality=quality, optimize=True)
+            data = buf.getvalue()
+            return data, "image/jpeg", was_resized
+    except Exception:
+        # Let caller handle failures (so attach_images can fallback and warn)
+        raise
+
+def image_bytes_to_data_url(img_bytes, mime):
+    b64 = base64.b64encode(img_bytes).decode("ascii")
+    return f"data:{mime};base64,{b64}"
+
+def show_images_inline_from_bytes(byte_items):
+    """
+    Display images inline in the chat (used for user attachments preview and user message display).
+    byte_items: iterable of dicts with keys {"bytes":..., "mime":..., "orig_path":...}
+    """
+    try:
+        chat_history.configure(state='normal')
+        for item in byte_items:
+            try:
+                b = item.get("bytes")
+                if b is None:
+                    # fallback: attempt to open orig_path
+                    p = item.get("orig_path")
+                    pil_img = Image.open(p)
+                else:
+                    pil_img = Image.open(BytesIO(b))
+
+                chat_width = chat_history.winfo_width()
+                if not chat_width or chat_width < 50:
+                    max_display_width = 600
+                else:
+                    max_display_width = max(200, chat_width - 80)
+
+                w, h = pil_img.size
+                if w > max_display_width:
+                    ratio = max_display_width / w
+                    new_size = (int(w * ratio), int(h * ratio))
+                    pil_img = pil_img.resize(new_size, resample=RESAMPLE_FILTER)
+
+                tk_img = ImageTk.PhotoImage(pil_img)
+                image_refs.append(tk_img)  # keep ref to avoid GC
+
+                chat_history.image_create(tk.END, image=tk_img)
+                chat_history.insert(tk.END, "\n")
+            except Exception as e_img:
+                chat_history.insert(tk.END, f"[Failed to preview image {os.path.basename(item.get('orig_path',''))}: {e_img}]\n")
+        chat_history.insert(tk.END, "\n")
+        chat_history.configure(state='disabled')
+        chat_history.see(tk.END)
+    except Exception as e_ui:
+        chat_history.configure(state='normal')
+        chat_history.insert(tk.END, f"Error displaying attached images: {e_ui}\n\n")
+        chat_history.configure(state='disabled')
+        chat_history.see(tk.END)
+
+def attach_images():
+    """
+    Choose one or more image files to attach to the next user message.
+    Compress/rescale them immediately and store the compressed bytes for preview and sending.
+    If an image was larger than max_dim and compression failed, attach raw bytes but warn in chat.
+    """
+    global attached_images
+    try:
+        app.update()
+        app.lift()
+        app.focus_force()
+    except Exception:
+        pass
+
+    paths = filedialog.askopenfilenames(
+        parent=app,
+        title="Attach image(s) for next message",
+        initialdir=os.getcwd(),
+        filetypes=[
+            ("Image files", ("*.png","*.jpg","*.jpeg","*.webp","*.gif","*.bmp")),
+            ("All files", "*.*"),
+        ],
+    )
+    if not paths:
+        return
+
+    new_attached = []
+    resized_count = 0
+    unchanged_count = 0
+
+    for p in paths:
+        orig_max_side = None
+        try:
+            # attempt to read original dimensions (best-effort)
+            with Image.open(p) as _img:
+                ow, oh = _.size
+                orig_max_side = max(ow, oh)
+        except Exception:
+            orig_max_side = None
+
+        try:
+            img_bytes, mime, was_resized = compress_image_to_jpeg_bytes(p, max_dim=MAX_UPLOADED_IMAGE_DIMENSION, quality=75)
+            if was_resized:
+                resized_count += 1
+            else:
+                unchanged_count += 1
+            new_attached.append({"orig_path": p, "bytes": img_bytes, "mime": mime})
+        except Exception as e:
+            # compression/resizing failed — fallback to raw file bytes
+            try:
+                with open(p, "rb") as f:
+                    raw = f.read()
+                new_attached.append({"orig_path": p, "bytes": raw, "mime": "application/octet-stream"})
+                unchanged_count += 1
+
+                # If image looked larger than max_dim, warn that resize failed and an uncompressed file was attached
+                if orig_max_side and orig_max_side > 500:
+                    try:
+                        size_bytes = os.path.getsize(p) if os.path.exists(p) else None
+                        size_kb = f"{(size_bytes/1024):.1f} KB" if size_bytes else "unknown size"
+                    except Exception:
+                        size_kb = "unknown size"
+                    chat_history.configure(state='normal')
+                    chat_history.insert(
+                        tk.END,
+                        f"[Warning: could not resize '{os.path.basename(p)}' which was larger than 500px (attached uncompressed, {size_kb}). Sending it may incur high token usage.]\n",
+                        "separator"
+                    )
+                    chat_history.configure(state='disabled')
+                    chat_history.see(tk.END)
+            except Exception as e2:
+                chat_history.configure(state='normal')
+                chat_history.insert(tk.END, f"[Failed to attach image {os.path.basename(p)}: {e2}]\n")
+                chat_history.configure(state='disabled')
+                chat_history.see(tk.END)
+
+    if new_attached:
+        attached_images = new_attached
+
+        # Build an accurate summary message
+        if resized_count == len(new_attached):
+            summary = f"[Attached {len(attached_images)} image(s) for the next message (all resized to max 500px)]"
+        elif resized_count == 0:
+            summary = f"[Attached {len(attached_images)} image(s) for the next message (none needed resizing)]"
+        else:
+            summary = f"[Attached {len(attached_images)} image(s) for the next message ({resized_count} resized, {unchanged_count} unchanged; max 500px)]"
+
+        chat_history.configure(state='normal')
+        chat_history.insert(tk.END, summary + "\n", "separator")
+        chat_history.configure(state='disabled')
+        chat_history.see(tk.END)
+
+        # Inline preview of the compressed images (or raw if fallback)
+        show_images_inline_from_bytes(attached_images)
+
+def clear_attached_images():
+    """
+    Clear any images previously attached for the next message.
+    """
+    global attached_images
+    attached_images = []
+    chat_history.configure(state='normal')
+    chat_history.insert(tk.END, "[Cleared attached images]\n\n", "separator")
+    chat_history.configure(state='disabled')
+    chat_history.see(tk.END)
+
 def animate_wait():
     global anim_dots, anim_after_id
     if not waiting:
@@ -341,27 +539,71 @@ def stop_waiting():
 # Chat send (streaming) & image generation
 # -----------------------------
 def send_message():
+    global attached_images
     user_message = user_input.get("1.0", tk.END).strip()
-    if not user_message:
+
+    # If neither text nor images, do nothing
+    if not user_message and not attached_images:
         return
+
+    selected_model = current_model_var.get()
+    if attached_images and not model_supports_images(selected_model):
+        # Soft warning in chat, but still allow sending (the API may reject it)
+        chat_history.configure(state='normal')
+        chat_history.insert(tk.END, f"[Warning: model '{selected_model}' may not support image input]\n\n", "separator")
+        chat_history.configure(state='disabled')
+        chat_history.see(tk.END)
+
+    # Prepare the content for the API (text + image parts if any)
+    content_parts = []
+    if user_message:
+        content_parts.append({"type": "text", "text": user_message})
+
+    images_to_send = attached_images[:]  # copy then clear session attachments
+    attached_images = []
+
+    # Convert images (bytes) to data URLs and add as image parts
+    for item in images_to_send:
+        try:
+            img_bytes = item.get("bytes")
+            mime = item.get("mime", "image/jpeg")
+            data_url = image_bytes_to_data_url(img_bytes, mime)
+            content_parts.append({
+                "type": "image_url",
+                "image_url": {"url": data_url}
+            })
+        except Exception as e:
+            # If an image fails to convert, mention it but continue
+            chat_history.configure(state='normal')
+            chat_history.insert(tk.END, f"[Failed to attach image {os.path.basename(item.get('orig_path',''))}: {e}]\n", "separator")
+            chat_history.configure(state='disabled')
+            chat_history.see(tk.END)
 
     # Disable the send button on the main thread immediately
     send_button.config(state='disabled')
 
+    # Append to conversation
     with conversation_lock:
-        conversation.append({"role": "user", "content": user_message})
+        if len(content_parts) == 1 and content_parts[0].get("type") == "text":
+            conversation.append({"role": "user", "content": user_message})
+        else:
+            conversation.append({"role": "user", "content": content_parts})
 
     def show_user_message():
         chat_history.configure(state='normal')
-        chat_history.insert(tk.END, "You: " + user_message + "\n")
+        if user_message:
+            chat_history.insert(tk.END, "You: " + user_message + "\n")
+        else:
+            chat_history.insert(tk.END, "You (images only):\n")
         chat_history.configure(state='disabled')
         chat_history.see(tk.END)
+        # Show attached (compressed) images inline under the user's message
+        if images_to_send:
+            show_images_inline_from_bytes(images_to_send)
         user_input.delete("1.0", tk.END)
 
     app.after(0, show_user_message)
     start_waiting()
-
-    selected_model = current_model_var.get()
 
     def worker(model_to_use):
         try:
@@ -429,7 +671,6 @@ def send_message():
                 chat_history.see(tk.END)
 
             app.after(0, show_error)
-
 
         finally:
             def on_request_complete():
@@ -764,8 +1005,11 @@ menu.add_cascade(label="File", menu=filemenu)
 filemenu.add_command(label="Export Chat", command=export_chat)
 filemenu.add_command(label="Import File", command=import_file)
 filemenu.add_command(label="Generate Image...", command=generate_image_dialog)
+# New: attach/clear image inputs for chat
+filemenu.add_command(label="Attach Image(s)...", command=attach_images)
+filemenu.add_command(label="Clear Attached Images", command=clear_attached_images)
 # capture index of generate image command so we can enable/disable it later
-_generate_image_menu_index = filemenu.index("end")
+_generate_image_menu_index = filemenu.index("end") - 2  # adjust since two items were added after
 
 # Model menu
 modelmenu = Menu(menu, tearoff=0)
