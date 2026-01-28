@@ -759,53 +759,64 @@ def import_file():
         except Exception:
             pass
 
-        filepath = filedialog.askopenfilename(
+        filepaths = filedialog.askopenfilenames(
             parent=app,
-            title="Import file for context",
+            title="Import file(s) for context",
             initialdir=os.getcwd(),
             filetypes=[
                 ("All files", "*.*"),
-                ("Text files", ("*.txt", "*.md")),   # use tuple for mac compatibility
+                ("Text files", ("*.txt", "*.md")),
                 ("Word documents", ("*.docx",)),
                 ("PDF files", ("*.pdf",)),
                 ("Excel files", ("*.xls", "*.xlsx"))
             ]
         )
-        print("askopenfilename returned:", repr(filepath))
-        if not filepath:
+        if not filepaths:
             return
 
-        ext = os.path.splitext(filepath)[1].lower()
-        try:
-            if ext in ('.txt', '.md'):
-                content = read_text_file(filepath)
-            elif ext == '.docx':
-                content = read_docx_file(filepath)
-            elif ext == '.pdf':
-                content = read_pdf_file(filepath)
-            elif ext in ('.xls', '.xlsx'):
-                content = read_excel_file(filepath)
-            else:
-                try:
+        imported_count = 0
+        preview_limit = 1000
+
+        for filepath in filepaths:
+            ext = os.path.splitext(filepath)[1].lower()
+            try:
+                if ext in ('.txt', '.md'):
                     content = read_text_file(filepath)
-                except Exception:
-                    raise RuntimeError("Unsupported file type and not readable as text.")
-        except Exception as e:
+                elif ext == '.docx':
+                    content = read_docx_file(filepath)
+                elif ext == '.pdf':
+                    content = read_pdf_file(filepath)
+                elif ext in ('.xls', '.xlsx'):
+                    content = read_excel_file(filepath)
+                else:
+                    # Try reading as text fallback
+                    try:
+                        content = read_text_file(filepath)
+                    except Exception:
+                        raise RuntimeError("Unsupported file type and not readable as text.")
+            except Exception as e:
+                chat_history.configure(state='normal')
+                chat_history.insert(tk.END, f"Error importing file {os.path.basename(filepath)}: {e}\n\n")
+                chat_history.configure(state='disabled')
+                chat_history.see(tk.END)
+                continue
+
+            with conversation_lock:
+                conversation.append({"role": "user", "content": content})
+
+            preview = content if len(content) <= preview_limit else content[:preview_limit] + "\n...[truncated preview]"
+
             chat_history.configure(state='normal')
-            chat_history.insert(tk.END, f"Error importing file {os.path.basename(filepath)}: {e}\n\n")
+            chat_history.insert(tk.END, f"You (imported {os.path.basename(filepath)}):\n{preview}\n\n")
             chat_history.configure(state='disabled')
             chat_history.see(tk.END)
-            return
 
-        with conversation_lock:
-            conversation.append({"role": "user", "content": content})
-        preview_limit = 1000
-        preview = content if len(content) <= preview_limit else content[:preview_limit] + "\n...[truncated preview]"
-        chat_history.configure(state='normal')
-        chat_history.insert(tk.END, f"You (imported {os.path.basename(filepath)}):\n{preview}\n\n")
-        chat_history.configure(state='disabled')
-        chat_history.see(tk.END)
+            imported_count += 1
 
+        if imported_count == 0:
+            messagebox.showinfo("Import Files", "No files were imported (all failed or canceled).")
+        else:
+            messagebox.showinfo("Import Files", f"Imported {imported_count} file(s).")
     except Exception as exc:
         print("import_file exception:", traceback.format_exc())
         messagebox.showerror("Import Error", f"Error opening file dialog or importing file:\n\n{exc}")
@@ -1003,7 +1014,7 @@ app.config(menu=menu)
 filemenu = Menu(menu, tearoff=0)
 menu.add_cascade(label="File", menu=filemenu)
 filemenu.add_command(label="Export Chat", command=export_chat)
-filemenu.add_command(label="Import File", command=import_file)
+filemenu.add_command(label="Import File(s)", command=import_file)
 filemenu.add_command(label="Generate Image...", command=generate_image_dialog)
 # New: attach/clear image inputs for chat
 filemenu.add_command(label="Attach Image(s)...", command=attach_images)

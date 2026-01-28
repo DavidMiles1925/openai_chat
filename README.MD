@@ -10,15 +10,18 @@ A lightweight desktop chat application that integrates with OpenAI models and pr
 ## Features
 
 - Chat with an OpenAI model using a desktop GUI (Tkinter).
-- Streaming assistant responses in the chat window for a responsive feel.
-- Import files for context: `.txt`, `.md`, `.docx`, `.pdf`, `xlsx`, and any text-based file. (preview shown and file appended to conversation).
-- Any unsupported files the program will attempt to read as a text file and give and error if unsuccessful.
-- Export chat history to a timestamped `.txt` file.
+  - Streaming assistant responses in the chat window for a responsive feel.
+  - Threaded networking so the UI remains responsive.
+  - Simple animated "Thinking..." indicator while requests are in flight.
+  - Export chat history to a timestamped `.txt` file.
+- Import files for context: `.txt`, `.md`, `.docx`, `.pdf`, `.xlsx`, and any text-based file. (preview shown and file appended to conversation).
+  - Any unsupported files the program will attempt to read as a text file and give and error if unsuccessful.
+- Import images: `.png,` `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp` (other formats may be partially supported but may fail compression).
+  - Images will be compressed upon uploading.
+  - Any unsupported images the program will attempt to read but may not be able to compressed.
 - Generate images from prompts (256x256, 512x512, 1024x1024); images saved to disk and displayed inline.
-- Simple animated "Thinking..." indicator while requests are in flight.
-- Threaded networking so the UI remains responsive.
 - Model selection menu: switch which chat model you are talking to at runtime without losing conversation context.
-  - Switching models preserves the conversation context: imported files and previous messages remain in the shared conversation, so the new model receives the full conversation history for subsequent requests.
+  - Switching models preserves the conversation context: the new model receives the full conversation history for subsequent requests.
 - Simple configuration via `config.py`.
 - In-app management of API Key through menu - Set, remove, or test API Key
 
@@ -90,13 +93,15 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
 
 > _NOTE: All model names must match [OpenAI documentaion](https://platform.openai.com/docs/pricing) EXACTLY!_
 
-| **Constant**              | **Description**                                                                                            | **Default Value**                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| **DEFAULT_MODEL_VERSION** | The model that will be selected for use when the program is opened.                                        | gpt-5-mini                                                                     |
-| **AVAILABLE_MODELS**      | The models that will appear in the list of chat models to choose from.                                     | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
-| **IMAGE_MODEL_VERSION**   | The model that will be used for image generation.                                                          | gpt-image-1                                                                    |
-| **ASSISTANT_NAME**        | This will be what the agent refers to itself as.                                                           | Jeeves                                                                         |
-| **OPENING_PROMPT**        | This is how the model is told to behave. This is how you can tailor the tone and feel of the conversation. | You are chatting with a user. Respond helpfully. Your name is {ASSISTANT_NAME} |
+| **Constant**                 | **Description**                                                                                            | **Default Value**                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **DEFAULT_MODEL_VERSION**    | The model that will be selected for use when the program is opened.                                        | gpt-5-mini                                                                     |
+| **AVAILABLE_MODELS**         | The models that will appear in the list of chat models to choose from.                                     | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
+| **VISION_CAPABLE_MODELS**    | Models that can accept images as uploads.                                                                  | gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini                                     |
+| **IMAGE_MODEL_VERSION**      | The model that will be used for image generation.                                                          | gpt-image-1                                                                    |
+| MAX_UPLOADED_IMAGE_DIMENSION | The maximum dimension for uplodaed images. Images will be compressed to this size.                         | 500                                                                            |
+| **ASSISTANT_NAME**           | This will be what the agent refers to itself as.                                                           | Jeeves                                                                         |
+| **OPENING_PROMPT**           | This is how the model is told to behave. This is how you can tailor the tone and feel of the conversation. | You are chatting with a user. Respond helpfully. Your name is {ASSISTANT_NAME} |
 
 ---
 
@@ -110,8 +115,10 @@ Option 2. (ONLY IF you need to conceal the key from the user.) Environment varia
 - **Status label**: shows "Idle" or "Thinking..." with animated dots.
 - **Menu → File:**
   - _Export Chat:_ saves a timestamped `.txt` file containing the chat contents. Saves the file in the directory the program was run from.
-  - _Import File:_ choose a `.txt`, `.md`, `.docx`, or `.pdf`. The content is appended to the conversation as a user message, and a truncated preview is shown in the chat.
+  - _Import File(s):_ choose file(s) `.txt`, `.md`, `.docx`, or `.pdf`. The content is appended to the conversation as a user message, and a truncated preview is shown in the chat.
   - _Generate Image...:_ open an image prompt dialog to generate images (saved to folder and inserted into chat).
+  - _Attatch Image(s)_: choose image(s): `.png,` `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp` (other formats may be partially supported but may fail compression).
+  - _Clear Attatched Images_: Clears any images that have not yet been sent from the memory.
 - **Menu → Model:**
   - Select which chat model to use for subsequent messages.
   - Available models (menu items): gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o-mini.
