@@ -22,7 +22,7 @@ except Exception as e:
     keyring = None
     print("Warning: keyring module not available. Install with: pip install keyring")
 
-from config import DEFAULT_MODEL_VERSION, ASSISTANT_NAME, IMAGE_MODEL_VERSION, AVAILABLE_MODELS, MAX_UPLOADED_IMAGE_DIMENSION
+from config import DEFAULT_MODEL_VERSION, ASSISTANT_NAME, IMAGE_MODEL_VERSION, AVAILABLE_MODELS, MAX_UPLOADED_IMAGE_DIMENSION, VISION_CAPABLE_MODELS
 
 try:
     RESAMPLE_FILTER = Image.Resampling.LANCZOS
